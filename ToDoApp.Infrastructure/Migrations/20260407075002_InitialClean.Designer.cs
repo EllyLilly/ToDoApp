@@ -11,7 +11,7 @@ using ToDoApp.Infrastructure.Data;
 namespace ToDoApp.Infrastructure.Migrations
 {
     [DbContext(typeof(ToDoDbContext))]
-    [Migration("20260406180228_InitialClean")]
+    [Migration("20260407075002_InitialClean")]
     partial class InitialClean
     {
         /// <inheritdoc />
@@ -36,7 +36,7 @@ namespace ToDoApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -74,13 +74,9 @@ namespace ToDoApp.Infrastructure.Migrations
 
             modelBuilder.Entity("ToDoApp.Core.Entities.TaskItem", b =>
                 {
-                    b.HasOne("ToDoApp.Core.Entities.User", "User")
+                    b.HasOne("ToDoApp.Core.Entities.User", null)
                         .WithMany("Tasks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("ToDoApp.Core.Entities.User", b =>

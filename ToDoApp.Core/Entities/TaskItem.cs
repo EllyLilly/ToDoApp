@@ -12,5 +12,8 @@ namespace ToDoApp.Core.Entities
         public string TaskName { get; set; } = string.Empty;
         public bool IsCompleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public required User User { get; set; }
+        public int UserId { get; set; }
     }
 }
