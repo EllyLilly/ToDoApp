@@ -13,5 +13,6 @@ namespace ToDoApp.Infrastructure.Data
         public ToDoDbContext(DbContextOptions<ToDoDbContext> options) : base(options) { }
 
         public DbSet<TaskItem> TaskItems { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
