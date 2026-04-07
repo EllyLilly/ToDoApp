@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using ToDoApp.API.Services;
+using ToDoApp.Core.Interfaces;
 using ToDoApp.Infrastructure.Data;
+using ToDoApp.Infrastructure.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+
 
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
