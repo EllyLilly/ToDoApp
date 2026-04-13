@@ -13,7 +13,7 @@ namespace ToDoApp.Core.Entities
         public bool IsCompleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public required User User { get; set; }
+        public User User { get; set; }
         public int UserId { get; set; }
     }
 }

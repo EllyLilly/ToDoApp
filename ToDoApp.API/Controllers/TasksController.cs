@@ -1,9 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using ToDoApp.Core.Entities;
+using ToDoApp.Core.Interfaces;
 using ToDoApp.Infrastructure.Data;
+using ToDoApp.Core.DTO;
+using ToDoApp.Infrastructure.Services;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace ToDoApp.API.Controllers
 {
@@ -11,24 +17,32 @@ namespace ToDoApp.API.Controllers
     [Route("api/tasks")]
     public class TasksController : ControllerBase
     {
+        private IValidator<TaskCreateDto> _createValidator;
+        private IValidator<TaskUpdateDto> _updateValidator;
 
-        private readonly ToDoDbContext _db;
+        private readonly ITaskService _taskService;
 
-        public TasksController(ToDoDbContext db) { _db = db; }
+        public TasksController(IValidator<TaskCreateDto> createValidator, IValidator<TaskUpdateDto> updateValidator, ITaskService taskService) 
+        {
+
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
+            _taskService = taskService;
+        }
 
         //GET: api/tasks
         [HttpGet]
-        public async Task<IActionResult> GetTasks()
+        public async Task<IActionResult> GetTasks([FromQuery]int userId)
         {
-            var tasks = await _db.TaskItems.ToListAsync();
+            var tasks = await _taskService.GetUserTasksAsync(userId);
             return Ok(tasks);
         }
 
         //GET: api/tasks/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetOneTask(int id)
+        public async Task<IActionResult> GetOneTask(int id, [FromQuery] int userId)
         {
-            var oneTask = await _db.TaskItems.FindAsync(id);
+            var oneTask = await _taskService.GetTaskByIdAsync(id, userId);
 
             if (oneTask == null)
             {
@@ -40,35 +54,43 @@ namespace ToDoApp.API.Controllers
 
         //POST: /api/tasks
         [HttpPost]
-        public async Task<ActionResult<TaskItem>> CreateTask([FromBody] TaskItem task)
+        public async Task<ActionResult<TaskResponseDto>> CreateTask([FromQuery] int userId, [FromBody] TaskCreateDto dto)
         {
-            task.CreatedAt = DateTime.UtcNow;
-            _db.TaskItems.Add(task);
-            await _db.SaveChangesAsync();
+            
+            ValidationResult result = await _createValidator.ValidateAsync(dto);
 
-
-            return CreatedAtAction(nameof(GetOneTask), new { id = task.Id }, task);
+            if(!result.IsValid)
+            {
+                return BadRequest(result.Errors);
+            }
+            
+            var createdTask = await _taskService.CreateTaskAsync(userId, dto);
+            
+            return CreatedAtAction(nameof(GetOneTask), new { id = createdTask.Id }, createdTask);
         }
 
         //PUT: /api/tasks/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItem updatedTask)
+        public async Task<IActionResult> UpdateTask(int id, [FromQuery] int userId, [FromBody] TaskUpdateDto updatedTask)
         {
+
+            ValidationResult validationResult = await _updateValidator.ValidateAsync(updatedTask);
+            if(!validationResult.IsValid)
+            { 
+                return BadRequest(validationResult.Errors); 
+            }
+            
             if (id != updatedTask.Id)
             {
                 return BadRequest();
             }
 
-            var existingTask = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == id);
+            var result = await _taskService.UpdateTaskAsync(id, userId, updatedTask);
 
-            if (existingTask == null)
+            if (result == null)
             {
                 return NotFound();
             }
-
-            existingTask.TaskName = updatedTask.TaskName;
-            existingTask.IsCompleted = updatedTask.IsCompleted;
-            await _db.SaveChangesAsync();
 
             return Ok();
 
@@ -76,17 +98,15 @@ namespace ToDoApp.API.Controllers
 
         //DELETE: /api/tasks/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(int id)
+        public async Task<IActionResult> DeleteTask(int id, [FromQuery] int userId)
         {
-            var task = await _db.TaskItems.FindAsync(id);
-            if (task == null)
+            var deleted = await _taskService.DeleteTaskAsync(id, userId);
+
+            if (!deleted)
             {
                 return NotFound();
             }
 
-            _db.TaskItems.Remove(task);
-
-            await _db.SaveChangesAsync();
             return NoContent();
         }
     }
