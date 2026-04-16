@@ -1,13 +1,14 @@
-﻿using System;
+﻿using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToDoApp.Core.Entities;
 using ToDoApp.Core.Interfaces;
 using ToDoApp.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-using ToDoApp.Core.Entities;
-using BCrypt.Net;
 
 namespace ToDoApp.Infrastructure.Services
 {
@@ -17,10 +18,13 @@ namespace ToDoApp.Infrastructure.Services
 
         private readonly IJwtService _jwtService;
 
-        public AuthService(ToDoDbContext db, IJwtService jwtService) 
+        private readonly ILogger<AuthService> _logger;
+
+        public AuthService(ToDoDbContext db, IJwtService jwtService, ILogger<AuthService> logger) 
         { 
             _db = db;
             _jwtService = jwtService;
+            _logger = logger;
         
         }
 
@@ -53,6 +57,9 @@ namespace ToDoApp.Infrastructure.Services
 
                 _db.Users.Add(newUser);
                 await _db.SaveChangesAsync();
+
+                _logger.LogInformation("New user registered: {UserName} ({Email})", userName, email);
+
                 return true;
             }
            
@@ -79,8 +86,12 @@ namespace ToDoApp.Infrastructure.Services
                 return null;
             }
 
+
                 
             var token = _jwtService.GenerateToken(user.Id, user.UserName);
+
+            _logger.LogInformation("User {UserName} logged in", userName);
+
             return token;
            
         }

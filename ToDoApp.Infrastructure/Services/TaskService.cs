@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,9 +14,11 @@ namespace ToDoApp.Infrastructure.Services
     {
 
         private readonly ITaskRepository _taskRepository;
+        private readonly ILogger<TaskService> _logger;
 
-        public TaskService(ITaskRepository taskRepository)
+        public TaskService(ILogger<TaskService> logger, ITaskRepository taskRepository)
         {
+            _logger = logger;
             _taskRepository = taskRepository;
         }
 
@@ -72,6 +75,9 @@ namespace ToDoApp.Infrastructure.Services
 
             await _taskRepository.SaveChangesAsync();
 
+            _logger.LogInformation("User {UserId} created task {TaskId}: {TaskName}",
+    userId, newTask.Id, newTask.TaskName);
+
             var dtoResult = new TaskResponseDto();
 
             dtoResult.Id = newTask.Id;
@@ -91,6 +97,8 @@ namespace ToDoApp.Infrastructure.Services
             if (oneTask == null) { return false; }
 
             _taskRepository.Delete(oneTask);
+
+            _logger.LogInformation("User {UserId} deleted task {TaskId}", userId, taskId);
 
             await _taskRepository.SaveChangesAsync();
 

@@ -1,18 +1,20 @@
 ﻿
-using Microsoft.AspNetCore.Mvc;
-//using System.ComponentModel.DataAnnotations;
-using ToDoApp.Core.Entities;
-using ToDoApp.API.DTO;
-using ToDoApp.Core.Interfaces;
-using ToDoApp.Infrastructure.Services;
+using Asp.Versioning;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
+using ToDoApp.API.DTO;
+//using System.ComponentModel.DataAnnotations;
+using ToDoApp.Core.Entities;
+using ToDoApp.Core.Interfaces;
+using ToDoApp.Infrastructure.Services;
 
 namespace ToDoApp.API.Controllers
 {
 
     [ApiController]
-    [Route("api/auth")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/auth")]
     public class AuthController : ControllerBase
     {
         private IValidator<RegisterRequest> _registerValidator;
